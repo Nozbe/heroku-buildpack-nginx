@@ -7,7 +7,7 @@ mkfifo $psmgr
 # Evaluate config to get $PORT
 erb config/nginx.conf.erb > config/nginx.conf
 # Log the config file for testing
-if [ "$LOG_NGINX_CONFIG" = "true" ] then
+if [[ "$LOG_NGINX_CONFIG" = "true" ]]; then
   cat config/nginx.conf -n
 fi
 
