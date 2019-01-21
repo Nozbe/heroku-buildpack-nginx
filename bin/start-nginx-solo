@@ -6,7 +6,10 @@ mkfifo $psmgr
 
 # Evaluate config to get $PORT
 erb config/nginx.conf.erb > config/nginx.conf
-cat config/nginx.conf -n
+# Log the config file for testing
+if $LOG_NGINX_CONFIG then
+  cat config/nginx.conf -n
+fi
 
 n=1
 while getopts :f option ${@:1:2}
