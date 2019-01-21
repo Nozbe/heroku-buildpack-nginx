@@ -3,15 +3,15 @@
 set -e
 
 mkdir -p "$1/bin/"
-cp -r "bin/openresty-1.9.15.1-heroku-18" "$1/bin/"
-echo "-----> openresty-buildpack: Installed openresty-1.9.15.1-heroku-18 to app/bin"
+cp -r "bin/openresty-1.13.6.2-heroku-18" "$1/bin/"
+echo "-----> openresty-buildpack: Installed openresty-1.13.6.2-heroku-18 to app/bin"
 
 cp bin/start-nginx-solo "$1/bin/"
 echo '-----> openresty-buildpack: Added start-nginx-solo to app/bin'
 
 mkdir -p "$1/config"
 
-cp bin/openresty-1.9.15.1-heroku-18/nginx/conf/mime.types "$1/config/"
+cp bin/openresty-1.13.6.2-heroku-18/nginx/conf/mime.types "$1/config/"
 echo '-----> openresty-buildpack: Openresty mime.types copied to app/config/'
 
 if [[ ! -f $1/config/nginx.conf.erb ]]; then

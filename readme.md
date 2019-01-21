@@ -1,25 +1,14 @@
-# Heroku Buildpack: NGINX
+# Bidvine's Openresty Heroku Buildpack
 
-Nginx-buildpack vendors NGINX inside a dyno and connects NGINX to an app server via UNIX domain sockets.
-
-## Motivation
-
-Some application servers (e.g. Ruby's Unicorn) halt progress when dealing with network I/O. Heroku's Cedar routing stack [buffers only the headers](https://devcenter.heroku.com/articles/http-routing#request-buffering) of inbound requests. (The Cedar router will buffer the headers and body of a response up to 1MB) Thus, the Heroku router engages the dyno during the entire body transfer –from the client to dyno. For applications servers with blocking I/O, the latency per request will be degraded by the content transfer. By using NGINX in front of the application server, we can eliminate a great deal of transfer time from the application server. In addition to making request body transfers more efficient, all other I/O should be improved since the application server need only communicate with a UNIX socket on localhost. Basically, for webservers that are not designed for efficient, non-blocking I/O, we will benefit from having NGINX to handle all I/O operations.
+Openresty-buildpack vendors Openresty inside a dyno and runs NGINX per your configuration.
 
 ## Versions
 
-* Buildpack Version: 1.1
-* NGINX Version: 1.9.5
+* Openresty Version: 1.13.6.2
 
-## Requirements (Proxy Mode)
+## Requirements
 
-* Your webserver listens to the socket at `/tmp/nginx.socket`.
-* You touch `/tmp/app-initialized` when you are ready for traffic.
-* You can start your web server with a shell command.
-
-## Requirements (Solo Mode)
-
-* Add a custom nginx config to your app source code at `config/nginx.conf.erb`. You can start by copying the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
+* Add a custom nginx config to your app source code at `config/nginx.conf.erb`.
 
 ## Features
 
@@ -45,22 +34,11 @@ You can correlate this id with your Heroku router logs:
 at=info method=GET path=/ host=salty-earth-7125.herokuapp.com request_id=e2c79e86b3260b9c703756ec93f8a66d fwd="67.180.77.184" dyno=web.1 connect=1ms service=8ms status=200 bytes=21
 ```
 
-### Language/App Server Agnostic
+### NGINX Solo Mode
 
-nginx-buildpack provides a command named `bin/start-nginx` this command takes another command as an argument. You must pass your app server's startup command to `start-nginx`.
-
-For example, to get NGINX and Unicorn up and running:
-
-```bash
-$ cat Procfile
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
-```
-
-### nginx Solo Mode
-
-nginx-buildpack provides a command named `bin/start-nginx-solo`. This is for you if you don't want to run an additional app server on the Dyno.
-This mode requires you to put a `config/nginx.conf.erb` in your app code. You can start by coping the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
-For example, to get NGINX and Unicorn up and running:
+openresty-buildpack provides a command named `bin/start-nginx-solo`.
+This requires you to put a `config/nginx.conf.erb` in your app code. You can start by coping the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
+For example, to get NGINX up and running:
 
 ```bash
 $ cat Procfile
@@ -78,124 +56,58 @@ For example, to set your `NGINX_WORKERS` to 8 on a PX dyno:
 $ heroku config:set NGINX_WORKERS=8
 ```
 
-### Customizable NGINX Config
+### Customizable Config
 
-You can provide your own NGINX config by creating a file named `nginx.conf.erb` in the config directory of your app. Start by copying the buildpack's [default config file](config/nginx.conf.erb).
+You can provide your own config by creating a file named `nginx.conf.erb` in the config directory of your app. Start by copying the buildpack's [default config file](config/nginx.conf.erb).
 
-### Customizable NGINX Compile Options
+### Customizable Openresty Compile Options
 
-See [scripts/build_nginx](scripts/build_nginx) for the build steps. Configuring is as easy as changing the "./configure" options.
+See below for the build steps. Configuring is as easy as changing the "./configure" options.
 
 You can run the builds in a [Docker](https://www.docker.com/) container:
 
+
+### Building a new Openresty binary:
+
+Download and install [Docker](https://www.docker.com/)
+
+From your command line:
 ```
-$ make build # It outputs the latest builds to bin/cedar-*
+# Pull the Heroku build environment image you want to use
+docker pull heroku/heroku:18-build
+
+# Run the Heroku image
+docker run -it heroku/heroku:18-build
 ```
 
-To test the builds:
-
+From the container's terminal you're now connected to:
 ```
-$ make shell
-$ cp bin/nginx-$STACK bin/nginx
-$ FORCE=1 bin/start-nginx
-```
+# Download the Openresty version you're using
+curl -O -L https://openresty.org/download/openresty-1.13.6.2.tar.gz
+tar xzf openresty-1.13.6.2.tar.gz
+cd openresty-1.13.6.2
 
-### Application/Dyno coordination
+# Download the PCRE version you're using
+curl -O -L http://iweb.dl.sourceforge.net/project/pcre/pcre/8.42/pcre-8.42.tar.bz2
+tar xjf pcre-8.42.tar.bz2
 
-The buildpack will not start NGINX until a file has been written to `/tmp/app-initialized`. Since NGINX binds to the dyno's $PORT and since the $PORT determines if the app can receive traffic, you can delay NGINX accepting traffic until your application is ready to handle it. The examples below show how/when you should write the file when working with Unicorn.
+# Build Openresty
+PATH=$PATH:/sbin ./configure --with-pcre=pcre-8.42 --with-luajit --with-http_postgres_module --with-file-aio --with-ipv6 --with-http_realip_module --with-http_addition_module --with-http_xslt_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_stub_status_module --with-mail --with-mail_ssl_module --with-pcre-jit --with-http_iconv_module -j2
+make
+make install
 
-## Setup
+# Zip Openresty
+cd /usr/local
+tar -czvf openresty-1.13.6.2-heroku-build.tar.gz openresty
 
-Here are 2 setup examples. One example for a new app, another for an existing app. In both cases, we are working with ruby & unicorn. Keep in mind that this buildpack is not ruby specific.
-
-### Existing App
-
-Update Buildpacks to use the latest stable version of this buildpack:
-```bash
-$ heroku buildpacks:add heroku-community/nginx
-```
-Alternatively, you can use the Github URL of this repo if you want to edge version.
-
-Update Procfile:
-```
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
-```
-```bash
-$ git add Procfile
-$ git commit -m 'Update procfile for NGINX buildpack'
-```
-Update Unicorn Config
-```ruby
-require 'fileutils'
-listen '/tmp/nginx.socket'
-before_fork do |server,worker|
-	FileUtils.touch('/tmp/app-initialized')
-end
-```
-```bash
-$ git add config/unicorn.rb
-$ git commit -m 'Update unicorn config to listen on NGINX socket.'
-```
-Deploy Changes
-```bash
-$ git push heroku master
+# Don't exit the container until after you've copied the zip file out of it below
 ```
 
-### New App
+From your command line:
+```
+# List running containers
+docker ps
 
-```bash
-$ mkdir myapp; cd myapp
-$ git init
+# Copy the zip file you built off the running container
+docker cp cbbe1368db40:/usr/local/openresty-1.13.6.2-heroku-build.tar.gz .
 ```
-
-**Gemfile**
-```ruby
-source 'https://rubygems.org'
-gem 'unicorn'
-```
-
-**config.ru**
-```ruby
-run Proc.new {[200,{'Content-Type' => 'text/plain'}, ["hello world"]]}
-```
-
-**config/unicorn.rb**
-```ruby
-require 'fileutils'
-preload_app true
-timeout 5
-worker_processes 4
-listen '/tmp/nginx.socket', backlog: 1024
-
-before_fork do |server,worker|
-	FileUtils.touch('/tmp/app-initialized')
-end
-```
-Install Gems
-```bash
-$ bundle install
-```
-Create Procfile
-```
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
-```
-Create & Push Heroku App:
-```bash
-$ heroku create
-$ heroku buildpacks:add heroku/ruby
-$ heroku buildpacks:add https://github.com/heroku/heroku-buildpack-nginx
-$ git add .
-$ git commit -am "init"
-$ git push heroku master
-$ heroku logs -t
-```
-Visit App
-```
-$ heroku open
-```
-
-## License
-Copyright (c) 2013 Ryan R. Smith
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
