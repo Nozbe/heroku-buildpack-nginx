@@ -5,6 +5,7 @@ Openresty-buildpack vendors Openresty inside a dyno and runs NGINX per your conf
 ## Versions
 
 * Openresty Version: 1.13.6.2
+* Heroku Stack: heroku-18
 
 ## Requirements
 
