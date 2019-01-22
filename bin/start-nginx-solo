@@ -37,8 +37,8 @@ echo 'buildpack=openresty at=logs-initialized'
   #We expect nginx to run in foreground.
   #We also expect a socket to be at /tmp/nginx.socket.
   echo 'buildpack=openresty at=nginx-start'
-  export LD_LIBRARY_PATH=bin/openresty-1.13.6.2-heroku-18/luajit/lib:$LD_LIBRARY_PATH
-  bin/openresty-1.13.6.2-heroku-18/nginx/sbin/nginx -p . -c config/nginx.conf
+  export LD_LIBRARY_PATH=bin/openresty/luajit/lib:$LD_LIBRARY_PATH
+  bin/openresty/nginx/sbin/nginx -p . -c config/nginx.conf
   echo 'nginx' >$psmgr
 ) &
 
