@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
-echo 'openresty-buildpack'
+echo 'Openresty'
 exit 0
