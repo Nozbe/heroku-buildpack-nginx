@@ -2,22 +2,27 @@
 
 set -e
 
-mkdir -p "$1/bin/"
-cp -r "bin/openresty-1.13.6.2-heroku-18" "$1/bin/openresty"
-echo "-----> openresty-buildpack: Installed openresty-1.13.6.2-heroku-18 to app/bin/openresty"
+mkdir -p "$1/nginx/bin/"
 
-cp bin/start-nginx-solo "$1/bin/"
-echo '-----> openresty-buildpack: Added start-nginx-solo to app/bin'
+cp -r "bin/openresty-1.13.6.2-heroku-18" "$1/nginx/bin/openresty"
+echo "-----> openresty-buildpack: Installed openresty-1.13.6.2-heroku-18 to app/nginx/bin/openresty"
 
-mkdir -p "$1/config"
+cp bin/start-nginx "$1/nginx/bin/"
+echo '-----> openresty-buildpack: Added start-nginx to app/nginx/bin'
 
-cp bin/openresty-1.13.6.2-heroku-18/nginx/conf/mime.types "$1/config/"
-echo '-----> openresty-buildpack: Openresty mime.types copied to app/config/'
+cp bin/start-nginx-solo "$1/nginx/bin/"
+echo '-----> openresty-buildpack: Added start-nginx-solo to app/nginx/bin'
 
-if [[ ! -f $1/config/nginx.conf.erb ]]; then
-	cp config/nginx.conf.erb "$1/config/"
-	echo '-----> openresty-buildpack: Default config copied to app/config.'
+mkdir -p "$1/nginx/config"
+
+cp bin/openresty-1.13.6.2-heroku-18/nginx/conf/mime.types "$1/nginx/config/"
+echo '-----> openresty-buildpack: Openresty mime.types copied to app/nginx/config/'
+
+if [[ ! -f $1/nginx/config/nginx.conf.erb ]]; then
+	cp config/nginx.conf.erb "$1/nginx/config/"
+	echo '-----> openresty-buildpack: Default config copied to app/nginx/config.'
 else
-	echo '-----> openresty-buildpack: Custom config found in app/config.'
+	echo '-----> openresty-buildpack: Custom config found in app/nginx/config.'
 fi
+
 exit 0
