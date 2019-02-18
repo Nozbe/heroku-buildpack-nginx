@@ -5,10 +5,10 @@ rm -f $psmgr
 mkfifo $psmgr
 
 # Evaluate config to get $PORT
-erb ~/nginx/config/nginx.conf.erb > ~/nginx/config/nginx.conf
+erb nginx/config/nginx.conf.erb > nginx/config/nginx.conf
 # Log the config file for testing
 if [[ "$LOG_NGINX_CONFIG" = "true" ]]; then
-  cat ~/nginx/config/nginx.conf -n
+  cat nginx/config/nginx.conf -n
 fi
 
 n=1
@@ -21,14 +21,14 @@ do
 done
 
 # Initialize log directory.
-mkdir -p ~/logs/nginx
-touch ~/logs/nginx/access.log ~/logs/nginx/error.log
+mkdir -p logs/nginx
+touch logs/nginx/access.log logs/nginx/error.log
 echo 'buildpack=openresty at=logs-initialized'
 
 # Start log redirection.
 (
   # Redirect nginx logs to stdout.
-  tail -qF -n 0 ~/logs/nginx/*.log
+  tail -qF -n 0 logs/nginx/*.log
   echo 'logs' >$psmgr
 ) &
 
@@ -61,8 +61,8 @@ fi
   # We expect nginx to run in foreground.
   # We also expect a socket to be at /tmp/nginx.socket.
   echo 'buildpack=openresty at=nginx-start'
-  export LD_LIBRARY_PATH=~/nginx/bin/openresty/luajit/lib:$LD_LIBRARY_PATH
-  ~/nginx/bin/openresty/nginx/sbin/nginx -p . -c ~/nginx/config/nginx.conf
+  export LD_LIBRARY_PATH=bin/openresty/luajit/lib:$LD_LIBRARY_PATH
+  nginx/bin/openresty/nginx/sbin/nginx -p . -c nginx/config/nginx.conf
   echo 'nginx' >$psmgr
 ) &
 
