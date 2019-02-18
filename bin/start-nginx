@@ -8,7 +8,7 @@ mkfifo $psmgr
 erb nginx/config/nginx.conf.erb > nginx/config/nginx.conf
 # Log the config file for testing
 if [[ "$LOG_NGINX_CONFIG" = "true" ]]; then
-  cat config/nginx.conf -n
+  cat nginx/config/nginx.conf -n
 fi
 
 n=1
