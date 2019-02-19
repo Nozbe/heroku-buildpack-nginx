@@ -9,7 +9,7 @@ Openresty-buildpack vendors Openresty inside a dyno and runs NGINX per your conf
 
 ## Requirements
 
-* Add a custom nginx config to your app source code at `config/nginx.conf.erb`.
+* Add a custom nginx config to your app source code at `nginx/config/nginx.conf.erb`.
 
 ## Features
 
@@ -35,15 +35,14 @@ You can correlate this id with your Heroku router logs:
 at=info method=GET path=/ host=salty-earth-7125.herokuapp.com request_id=e2c79e86b3260b9c703756ec93f8a66d fwd="67.180.77.184" dyno=web.1 connect=1ms service=8ms status=200 bytes=21
 ```
 
-### NGINX Solo Mode
+### Language/App Server Agnostic
 
-openresty-buildpack provides a command named `bin/start-nginx-solo`.
-This requires you to put a `config/nginx.conf.erb` in your app code. You can start by coping the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
-For example, to get NGINX up and running:
+nginx-buildpack provides a command named `bin/start-nginx` this command takes another command as an argument. You must pass your app server's startup command to `start-nginx`.
+
+For example, to get NGINX and working within a bash script:
 
 ```bash
-$ cat Procfile
-web: bin/start-nginx-solo
+nginx/bin/start-nginx npm run start-server:$env --prefix react/web
 ```
 
 ### Setting the Worker Processes
@@ -60,6 +59,24 @@ $ heroku config:set NGINX_WORKERS=8
 ### Customizable Config
 
 You can provide your own config by creating a file named `nginx.conf.erb` in the config directory of your app. Start by copying the buildpack's [default config file](config/nginx.conf.erb).
+
+### Application/Dyno Coordination
+
+Your app should listen to `/tmp/nginx.socket`:
+
+```bash
+PORT='/tmp/nginx.socket'
+```
+
+```JavaScript
+  express().listen(process.env.PORT, function(err) { ... })
+```
+
+Touch `/tmp/app-initialized` once your app is listening to the port:
+
+```
+fs.closeSync(fs.openSync('/tmp/app-initialized', 'w'));
+```
 
 ### Customizable Openresty Compile Options
 
@@ -92,8 +109,20 @@ cd openresty-1.13.6.2
 curl -O -L http://iweb.dl.sourceforge.net/project/pcre/pcre/8.42/pcre-8.42.tar.bz2
 tar xjf pcre-8.42.tar.bz2
 
+# Download Nginx Brotli
+curl -O -L https://github.com/eustas/ngx_brotli/archive/master.zip
+unzip master.zip
+
+# Download Brotli (based on the commit version specified at https://github.com/eustas/ngx_brotli/tree/master/deps)
+cd ngx_brotli-master/deps
+rmdir brotli
+curl -O -L https://github.com/google/brotli/archive/c6333e1e79fb62ea088443f192293f964409b04e.zip
+unzip c6333e1e79fb62ea088443f192293f964409b04e.zip
+mv brotli-c6333e1e79fb62ea088443f192293f964409b04e brotli
+
 # Build Openresty
-PATH=$PATH:/sbin ./configure --with-pcre=pcre-8.42 --with-luajit --with-http_postgres_module --with-file-aio --with-ipv6 --with-http_realip_module --with-http_addition_module --with-http_xslt_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_stub_status_module --with-mail --with-mail_ssl_module --with-pcre-jit --with-http_iconv_module -j2
+cd ../..
+PATH=$PATH:/sbin ./configure --add-module=ngx_brotli-master --with-pcre=pcre-8.42 --with-luajit --with-http_postgres_module --with-file-aio --with-ipv6 --with-http_realip_module --with-http_addition_module --with-http_xslt_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_stub_status_module --with-mail --with-mail_ssl_module --with-pcre-jit --with-http_iconv_module -j2
 make
 make install
 

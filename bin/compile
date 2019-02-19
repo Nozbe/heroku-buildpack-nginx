@@ -10,9 +10,6 @@ echo "-----> openresty-buildpack: Installed openresty-1.13.6.2-heroku-18 to app/
 cp bin/start-nginx "$1/nginx/bin/"
 echo '-----> openresty-buildpack: Added start-nginx to app/nginx/bin'
 
-cp bin/start-nginx-solo "$1/nginx/bin/"
-echo '-----> openresty-buildpack: Added start-nginx-solo to app/nginx/bin'
-
 mkdir -p "$1/nginx/config"
 
 cp bin/openresty-1.13.6.2-heroku-18/nginx/conf/mime.types "$1/nginx/config/"
