@@ -13,6 +13,7 @@ Openresty-buildpack vendors Openresty inside a dyno and runs NGINX per your conf
 ## Requirements
 
 * Add a custom nginx config to your app source code at `nginx/config/nginx.conf.erb`.
+* Touch /tmp/app-initialized once your app is listening on the port specified in your config
 
 ## Features
 
