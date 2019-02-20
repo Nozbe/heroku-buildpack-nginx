@@ -3,9 +3,13 @@
 set -e
 
 mkdir -p "$1/nginx/bin/"
+mkdir -p "$1/brotli/"
 
 cp -r "bin/openresty-1.13.6.2-heroku-18" "$1/nginx/bin/openresty"
 echo "-----> openresty-buildpack: Installed openresty-1.13.6.2-heroku-18 to app/nginx/bin/openresty"
+
+cp -r "bin/brotli" "$1/brotli"
+echo "-----> openresty-buildpack: Installed brotli to app/brotli"
 
 cp bin/start-nginx "$1/nginx/bin/"
 echo '-----> openresty-buildpack: Added start-nginx to app/nginx/bin'

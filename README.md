@@ -6,8 +6,7 @@ Openresty-buildpack vendors Openresty inside a dyno and runs NGINX per your conf
 
 * Openresty: 1.13.6.2
 * PCRE: 8.42
-* Nginx Brotli: https://github.com/eustas/ngx_brotli/commit/8104036af9cff4b1d34f22d00ba857e2a93a243c
-* Brotli: https://github.com/google/brotli/tree/c6333e1e79fb62ea088443f192293f964409b04e
+* Nginx Brotli: https://github.com/eustas/ngx_brotli/commit/8104036af9cff4b1d34f22d00ba857e2a93a243c with https://github.com/google/brotli/tree/c6333e1e79fb62ea088443f192293f964409b04e
 * Heroku Stack: heroku-18
 
 ## Requirements
