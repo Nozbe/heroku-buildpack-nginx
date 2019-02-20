@@ -89,7 +89,7 @@ See below for the build steps. Configuring is as easy as changing the "./configu
 You can run the builds in a [Docker](https://www.docker.com/) container:
 
 
-### Building a new Openresty binary:
+### Building a new Openresty binary
 
 Download and install [Docker](https://www.docker.com/)
 
