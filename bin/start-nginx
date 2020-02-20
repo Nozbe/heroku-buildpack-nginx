@@ -6,6 +6,11 @@ mkfifo $psmgr
 
 # Evaluate config to get $PORT
 erb nginx/config/nginx.conf.erb > nginx/config/nginx.conf
+
+if [[ -f nginx/config/shared.conf.erb ]]; then
+  erb nginx/config/shared.conf.erb > nginx/config/shared.conf
+fi
+
 # Log the config file for testing
 if [[ "$LOG_NGINX_CONFIG" = "true" ]]; then
   cat nginx/config/nginx.conf -n
